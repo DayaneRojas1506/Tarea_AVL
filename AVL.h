@@ -1,313 +1,274 @@
-#include <iostream>
-#include <vector>
-#include <stack>
+#pragma once
+
 #include <queue>
-
+#include <stack>
+#include <iostream>
 using namespace std;
+template <typename T> class AVLTree {
 
-struct NodeAVL{
-    int data;
-    int h;
-    NodeAVL* left;
-    NodeAVL* right;
-    NodeAVL(){///construyendo nodos hoja
-        data = -1;
-        left= nullptr;
-        right = nullptr;
-        h=0;
-    }
-    NodeAVL(int val){
-        data = val;
-        left= nullptr;
-        right = nullptr;
-        h=0;
-    }
-    void display(){
-        cout<<data<<"-"<<h;
-    }
-    NodeAVL(int val,NodeAVL* l,NodeAVL* r){
-        data = val;
-        left= l;
-        right = r;
-        h=0;
-    }
-};
+  struct NodeBT {
+    T data;
+    NodeBT *left;
+    NodeBT *right;
+    NodeBT(T data_, NodeBT *left_ = nullptr, NodeBT *right_ = nullptr)
+        : data(data_), left(left_), right(right_) {}
+  };
+  NodeBT *root;
 
-int altura(NodeAVL* p){
-    if(p!= nullptr)
-        return p->h;
-    else
-        return -1;
-}
-
-int rBalanceo(NodeAVL* p){
-    if(p==nullptr)
-        return 0;
-    else
-        return altura(p->left) - altura(p->right);
-}
-
-int heightUpdate(NodeAVL* node){
-    if (node == nullptr)
-        return -1;
-
-    int left = heightUpdate(node->left);
-    int right = heightUpdate(node->right);
-
-    return 1 + max(left, right);
-}
-
-class AVL{
 private:
-    NodeAVL* root;
+  void insert(NodeBT *&node, T value);
+  void remove(NodeBT *&node, T value);
+  void print(NodeBT *node, int depth);
+  T minValue(NodeBT *node);
+  T maxValue(NodeBT *node);
+
+  void inOrder(NodeBT *node, string &str);
+  void postOrder(NodeBT *node, string &str);
+  void preOrder(NodeBT *node, string &str);
+  T successor(NodeBT *node, T value, NodeBT *lastnode);
+  T predecessor(NodeBT *node, T value, NodeBT *lastnode);
+
+int height();
+
 public:
-    AVL(){
-        root =nullptr;
-    }
-    AVL(NodeAVL* n){
-        root = n;
-    }
-
-    void rotateWithLeftChild(NodeAVL*& k2){
-
-        NodeAVL* k1 = k2->left;
-        k2->left = k1->right;
-        k1->right = k2;
-        ///update heights
-        k2->h = 1 + max(altura(k2->left), altura(k2->right));
-        k1->h = 1 + max(altura(k1->left), altura(k2));   //// k1->right = k2
-        k2 = k1;
-    }
-
-    void rotateWithRightChild(NodeAVL*& k2){
-        NodeAVL* k1  = k2->right;
-        k2->right = k1->left;
-        k1->left = k2;
-        ///update heights
-        k2->h = 1 + max(altura(k2->left), altura(k2->right));
-        k1->h = 1 + max(altura(k1->left), altura(k1->right));
-        k2 = k1;
-    }
-    void doubleWithLeftChild(NodeAVL*& k3){
-        ///LR
-        rotateWithRightChild(k3->left);
-        rotateWithLeftChild(k3);
-    }
-    void doubleWithRightChild(NodeAVL*& k3){
-        ///RL
-        rotateWithLeftChild(k3->right);
-        rotateWithRightChild(k3);
-    }
-    void insert(int val,NodeAVL*& n){
-        if(n == nullptr){
-            n = new NodeAVL(val, nullptr, nullptr);
-        }
-        else if(val< n->data){
-            insert(val, n->left);
-        }
-        else if(val> n->data){
-            insert(val, n->right);
-        }
-
-        n->h = heightUpdate(n);
-
-        balance(n);
-    }
-    void insert(int val){
-        insert(val,root);
-    }
-
-    ///balance(t) asume que t esta balanceado o a 1 de serlo
-    void balance(NodeAVL* & p){
-        if(p==nullptr) return;
-        if(rBalanceo(p) > 1){
-            ///desbalanceo izquierdo
-            ///2 casos: LL o LR
-
-            ///LL
-            if(rBalanceo(p->left)>=0){
-                rotateWithLeftChild(p);
-            }
-                ///LR
-            else{
-                doubleWithLeftChild(p);
-            }
-        }
-        else if (rBalanceo(p)<-1){
-            ///desbalanceo derecho
-            ///RL,RR
-
-            ///RR
-            if(rBalanceo(p->right)<=0){
-                rotateWithRightChild(p);
-            }
-                ///RL
-            else {
-                rotateWithRightChild(p);
-            }
-        }
-    }
-
-    void raiz(){
-        cout<<root->data<<"\n";
-    }
-
-    void inOrder(NodeAVL*& p){
-        if(p ==nullptr)
-            return;
-
-        inOrder(p->left);
-        cout<<p->data<<" ";
-        inOrder(p->right);
-    }
-
-    void inOrder(){
-        inOrder(root);
-        cout<<"\n";
-    }
-
-    void preOrder(NodeAVL*& p){
-        if(p==nullptr) return;
-        cout<<p->data<<"\t";
-        preOrder(p->left);
-        preOrder(p->right);
-    }
-    void preOrder(){
-        preOrder(root);
-        cout<<"\n";
-    }
-
-    void postOrder(NodeAVL*& p){
-        if(p==nullptr) return;
-        postOrder(p->left);
-        postOrder(p->right);
-        cout<<p->data<<"\t";
-    }
-    void postOrder(){
-        postOrder(root);
-        cout<<"\n";
-    }
-
-    void dfs(NodeAVL*& p){
-        if(p==nullptr) return;
-        stack<NodeAVL*> s;
-        s.push(p);
-        while(!s.empty()){
-            NodeAVL* x = s.top();
-            cout<<x-> data<<"\t";
-            s.pop();
-            if(x->right) s.push(x->right);
-            if(x->left) s.push(x->left);
-        }
-    }
-    void dfs(){
-        dfs(root);
-        cout<<"\n";
-    }
-
-    void bfs(NodeAVL*& p){
-        if(p==nullptr) return;
-        queue<NodeAVL*> q;
-        q.push(p);
-        while(!q.empty()){
-            NodeAVL* x=q.front();
-            //cout<<x->data<<"-"<<x->h<<"\t";
-            cout<<x->data<<"_"<<rBalanceo(x)<<"\t";
-            q.pop();
-            if(x->left) q.push(x->left);
-            if(x->right) q.push(x->right);
-        }
-    }
-    void bfs(){
-        bfs(root);
-        cout<<"\n";
-    }
-
-    bool find(NodeAVL*& p, int value){
-        if(p==nullptr) return false;
-        if(value< p->data)
-            return find(p->left, value);
-        if(value> p->data)
-            return find(p->right, value);
-        return true;
-    }
-
-    bool find(int value){
-        return find(root,value);
-    }
-
-    NodeAVL* fMin(NodeAVL* p){
-        ///recursiva:
-        if(p==nullptr) return nullptr;
-
-        if(p->left==nullptr) return p;
-        return fMin(p->left);
-    }
-
-    NodeAVL* fMin(){
-        return fMin(root);
-    }
-
-    NodeAVL* fMax(NodeAVL* p){
-        if(p!=nullptr)
-            while(p->right)
-                p=p->right;
-        return p;
-    }
-    NodeAVL* fMax(){
-        return fMax(root);
-    }
-
-    void remove(int val, NodeAVL*& p){
-        ///eliminacion
-        if(p==nullptr){
-            return;
-        }
-        if(val < p->data){
-            remove(val, p->left);
-        }
-        else if(val> p->data){
-            remove(val, p->right);
-        }
-        ///p->data = val
-        if(p->left != nullptr && p->right!= nullptr){ ///si tiene 2 descendientes
-            int nuevo = fMin(p->right)->data; ///sucesor de p->data
-            p->data = nuevo;
-            remove(nuevo, p->right);
-        }
-        else{
-            NodeAVL* old = p;
-            ///p tiene maximo 1 descendiente
-            if(p->left != nullptr){
-                p = p->left;
-            }
-            else
-                p = p->right;
-
-            delete old;
-        }
-
-        ///balance()
-        balance(p);
-    }
-
-    void remove(int val){
-        remove(val, root);
-    }
+  AVLTree() { root = nullptr; }
+  void insert(T value);
+  void remove(T value);
+  void print();
+  string inOrder();
+  string postOrder();
+  string preOrder();
+  T minValue();
+  T maxValue();
+  T successor(T value);
+  T predecessor(T value);
+  void BreadthFirstSearch();
+  void DepthFirstSearch();
 };
+template <typename T>
 
-int main(){
-    AVL* bstree = new AVL;
-    vector<int> v = {5,3,6,2,4,1};
+void AVLTree<T>::BreadthFirstSearch() {
+  queue<NodeBT *> cola;
+  cout << "Recorrido por anchura" << endl;
+    cola.enqueue(this->root);
+  while (!cola.is_empty()) {
+    NodeBT *node = cola.dequeue();
+    cout << node->data << " ";
+    if (node->left != nullptr)
+        cola.enqueue(node->left);
+    if (node->right != nullptr)
+        cola.enqueue(node->right);
+  }
+  cout << endl;
+}
+template <typename T>
 
-    for(int i=0;i<v.size();i++){
-        bstree->insert(v[i]);
-        cout<< v[i]<<endl;
+void AVLTree<T>::DepthFirstSearch() {
+  cout << "Recorrido por profundidad" << endl;
+  stack<NodeBT *> pila;
+    pila.push(this->root);
+  while (!pila.is_empty()) {
+    NodeBT *node = pila.pop();
+    cout << node->data << " ";
+    if (node->right != nullptr) {
+        pila.push(node->right);
     }
+    if (node->left != nullptr) {
+        pila.push(node->left);
+    }
+  }
+  cout << endl;
+}
 
-    cout<<"impresion bfs con altura de cada nodo:\n";
-    bstree->inOrder();
-    bstree->raiz();
-    //bstree->balance();
-    return 0;
+template <typename T>
+T AVLTree<T>::successor(NodeBT *node, T value, NodeBT *lastnode) {
+  if (node == nullptr) {
+    if (lastnode) {
+      return lastnode->data;
+    } else {
+      throw "no predecessor";
+    }
+  } else if (node->data < value) {
+    return successor(node->right, value, lastnode);
+  } else if (node->data > value) {
+    lastnode = node;
+    return successor(node->left, value, lastnode);
+  } else {
+    if (node->right) {
+      return minValue(node->right);
+    } else {
+      return successor(node->right, value, lastnode); 
+    }
+  }
+}
+
+template <typename T>
+T AVLTree<T>::predecessor(NodeBT *node, T value, NodeBT *lastnode) {
+  if (node == nullptr) {
+    if (lastnode) {
+      return lastnode->data;
+    } else {
+      throw "no predecessor";
+    }
+  } else if (node->data < value) {
+    lastnode = node;
+
+    return predecessor(node->right, value, lastnode);
+  } else if (node->data > value) {
+
+    return predecessor(node->left, value, lastnode);
+  } else {
+    if (node->left) {
+      return maxValue(node->left);
+    } else {
+      return predecessor(node->left, value, lastnode);
+    }
+  }
+}
+
+template <typename T> T AVLTree<T>::successor(T value) {
+  return successor(this->root, value, root->right);
+}
+template <typename T> T AVLTree<T>::predecessor(T value) {
+  return predecessor(this->root, value, root->left);
+}
+
+template <typename T> string AVLTree<T>::preOrder() {
+  string result = "";
+  preOrder(root, result);
+  return result;
+}
+
+template <typename T> void AVLTree<T>::preOrder(NodeBT *node, string &str) {
+  if (!node) {
+    return;
+  }
+
+  str += to_string(node->data);
+  str += " ";
+
+  preOrder(node->left, str);
+
+  preOrder(node->right, str);
+}
+template <typename T> string AVLTree<T>::inOrder() {
+  string result = "";
+  inOrder(root, result);
+  return result;
+}
+
+template <typename T> void AVLTree<T>::inOrder(NodeBT *node, string &str) {
+  if (!node) {
+    return;
+  }
+  inOrder(node->left, str);
+  str += to_string(node->data);
+  str += " ";
+  inOrder(node->right, str);
+}
+
+template <typename T> string AVLTree<T>::postOrder() {
+  string result = "";
+  postOrder(root, result);
+  return result;
+}
+
+template <typename T> void AVLTree<T>::postOrder(NodeBT *node, string &str) {
+  if (!node) {
+    return;
+  }
+
+  postOrder(node->left, str);
+  postOrder(node->right, str);
+  str += to_string(node->data);
+  str += " ";
+}
+
+template <typename T> void AVLTree<T>::insert(T value) {
+  insert(this->root, value);
+}
+
+template <typename T> void AVLTree<T>::insert(NodeBT *&node, T value) {
+  if (node == nullptr) {
+    node = new NodeBT(value);
+
+  } else if (value < node->data) {
+    insert(node->left, value);
+
+  } else if (value > node->data) {
+    insert(node->right, value);
+  } else {
+    return;
+  }
+}
+
+template <typename T> void AVLTree<T>::remove(T value) {
+  remove(this->root, value);
+}
+
+template <typename T> T AVLTree<T>::minValue() { return minValue(root); }
+
+template <typename T> T AVLTree<T>::maxValue() {  return maxValue(root); }
+
+template <typename T> T AVLTree<T>::minValue(NodeBT *node) {
+  if (node == nullptr) {
+    throw "vacio";
+  } else if (node->left == nullptr) {
+    return node->data;
+  } else {
+    return minValue(node->left);
+  }
+}
+
+template <typename T> T AVLTree<T>::maxValue(NodeBT *node) {
+  if (node == nullptr) {
+    throw "vacio";
+  } else if (node->right == nullptr) {
+    return node->data;
+  } else {
+    return maxValue(node->right);
+  }
+}
+
+template <typename T> void AVLTree<T>::remove(NodeBT *&node, T value) {
+  if (node == nullptr) {
+    return;
+
+  } else if (value == node->data) {
+    if (node->left == nullptr && node->right == nullptr) {
+      delete node;
+      node = nullptr;
+    } else if (node->left == nullptr) {
+      NodeBT *temp = node->right;
+      delete node;
+      node = temp;
+    } else if (node->right == nullptr) {
+      NodeBT *temp = node->left;
+      delete node;
+      node = temp;
+    } else {
+      T temp = predecessor(this->root, value, root->left);
+      node->data = temp;
+      remove(node->left, temp);
+    }
+  } else if (value < node->data) {
+    remove(node->left, value);
+
+  } else {
+    remove(node->right, value);
+  }
+}
+
+template <typename T> void AVLTree<T>::print() { print(root, 0); }
+
+template <typename T> void AVLTree<T>::print(NodeBT *node, int depth) {
+  if (node) {
+    print(node->right, depth + 1);
+    for (int i = 0; i < depth; ++i) {
+      cout << "    ";
+    }
+    cout << node->data << endl;
+
+    print(node->left, depth + 1);
+  }
 }
