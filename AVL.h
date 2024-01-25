@@ -1,8 +1,8 @@
 #pragma once
 
+#include <iostream>
 #include <queue>
 #include <stack>
-#include <iostream>
 using namespace std;
 template <typename T> class AVLTree {
 
@@ -28,7 +28,57 @@ private:
   T successor(NodeBT *node, T value, NodeBT *lastnode);
   T predecessor(NodeBT *node, T value, NodeBT *lastnode);
 
-int height();
+  int height(NodeBT *node) {
+    if (node == nullptr) {
+      return -1;
+    } else {
+      return 1 + max(height(node->right), height(node->left));
+    }
+  }
+
+  int hb(NodeBT *node) { return height(node->left) - height(node->right); }
+
+  void L_Rota(NodeBT *&node) {
+    auto temp = node->right;
+    node->right = temp->left;
+    temp->left = node;
+    node = temp;
+  }
+
+  void R_Rota(NodeBT *&node) {
+    auto temp = node->left;
+    node->left = temp->right;
+    temp->right = node;
+    node = temp;
+  }
+
+  void LR_Rota(NodeBT *&node) {
+    R_Rota(node->left);
+    L_Rota(node);
+  }
+
+  void RL_Rota(NodeBT *node) {
+    R_Rota(node->right);
+    L_Rota(node);
+  }
+
+  void Balancear(NodeBT *&node) {
+    if (hb(node) >= 2) {
+      if (hb(node->left) >= 0) {
+        R_Rota(node);
+      } else {
+        LR_Rota(node);
+      }
+    }
+
+    if (hb(node) <= -2) {
+      if (hb(node->right) <= 0) {
+        L_Rota(node);
+      } else {
+        RL_Rota(node);
+      }
+    }
+  }
 
 public:
   AVLTree() { root = nullptr; }
@@ -44,37 +94,39 @@ public:
   T predecessor(T value);
   void BreadthFirstSearch();
   void DepthFirstSearch();
-};
-template <typename T>
-
+};template <typename T>
 void AVLTree<T>::BreadthFirstSearch() {
   queue<NodeBT *> cola;
   cout << "Recorrido por anchura" << endl;
-    cola.enqueue(this->root);
-  while (!cola.is_empty()) {
-    NodeBT *node = cola.dequeue();
+  cola.push(this->root);
+
+  while (!cola.empty()) {
+    NodeBT *node = cola.front();
+    cola.pop();
     cout << node->data << " ";
     if (node->left != nullptr)
-        cola.enqueue(node->left);
+      cola.push(node->left);
     if (node->right != nullptr)
-        cola.enqueue(node->right);
+      cola.push(node->right);
   }
   cout << endl;
 }
-template <typename T>
 
+template <typename T>
 void AVLTree<T>::DepthFirstSearch() {
   cout << "Recorrido por profundidad" << endl;
   stack<NodeBT *> pila;
-    pila.push(this->root);
-  while (!pila.is_empty()) {
-    NodeBT *node = pila.pop();
+  pila.push(this->root);
+
+  while (!pila.empty()) {
+    NodeBT *node = pila.top();
+    pila.pop();
     cout << node->data << " ";
     if (node->right != nullptr) {
-        pila.push(node->right);
+      pila.push(node->right);
     }
     if (node->left != nullptr) {
-        pila.push(node->left);
+      pila.push(node->left);
     }
   }
   cout << endl;
@@ -97,7 +149,7 @@ T AVLTree<T>::successor(NodeBT *node, T value, NodeBT *lastnode) {
     if (node->right) {
       return minValue(node->right);
     } else {
-      return successor(node->right, value, lastnode); 
+      return successor(node->right, value, lastnode);
     }
   }
 }
@@ -200,6 +252,8 @@ template <typename T> void AVLTree<T>::insert(NodeBT *&node, T value) {
   } else {
     return;
   }
+
+  Balancear(node);
 }
 
 template <typename T> void AVLTree<T>::remove(T value) {
@@ -208,7 +262,7 @@ template <typename T> void AVLTree<T>::remove(T value) {
 
 template <typename T> T AVLTree<T>::minValue() { return minValue(root); }
 
-template <typename T> T AVLTree<T>::maxValue() {  return maxValue(root); }
+template <typename T> T AVLTree<T>::maxValue() { return maxValue(root); }
 
 template <typename T> T AVLTree<T>::minValue(NodeBT *node) {
   if (node == nullptr) {
@@ -229,35 +283,33 @@ template <typename T> T AVLTree<T>::maxValue(NodeBT *node) {
     return maxValue(node->right);
   }
 }
-
 template <typename T> void AVLTree<T>::remove(NodeBT *&node, T value) {
   if (node == nullptr) {
     return;
-
-  } else if (value == node->data) {
-    if (node->left == nullptr && node->right == nullptr) {
-      delete node;
-      node = nullptr;
-    } else if (node->left == nullptr) {
-      NodeBT *temp = node->right;
-      delete node;
-      node = temp;
-    } else if (node->right == nullptr) {
-      NodeBT *temp = node->left;
-      delete node;
-      node = temp;
-    } else {
-      T temp = predecessor(this->root, value, root->left);
-      node->data = temp;
-      remove(node->left, temp);
-    }
   } else if (value < node->data) {
     remove(node->left, value);
-
-  } else {
+  } else if (value > node->data) {
     remove(node->right, value);
+  } else {
+    if (node->left == nullptr || node->right == nullptr) {
+      NodeBT *temp = node->left ? node->left : node->right;
+      if (temp == nullptr) {
+        temp = node;
+        node = nullptr;
+      } else {
+        *node = *temp; 
+        delete temp;
+      }
+    } else {
+
+      T tempData = minValue(node->right);
+      node->data = tempData;
+      remove(node->right, tempData);
+    }
   }
+//  Balancear(node); 
 }
+
 
 template <typename T> void AVLTree<T>::print() { print(root, 0); }
 
